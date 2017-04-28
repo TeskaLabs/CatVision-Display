@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>CatVision Screen Test</title>
+</head>
+<body>
+	<script type="text/javascript" src="./dist/cvio.min.js"></script>
+	<script type="text/javascript">
+		CVIO.init({
+			url: 'https://catvision.io',
+			authToken: '[AUTH_TOKEN]',
+			authTokenURL: '/authtoken',
+			onAuthTokenRequest: function() {
+				var xhr = new XMLHttpRequest();
+				xhr.open('GET', '/authtoken');
+				xhr.onload = function() {
+					if (xhr.status == 200)
+						CVIO.setAuthToken(xhr.response);
+					else {}
+				};
+				xhr.send('load');
+			}
+		});
+	</script>
+
+	<canvas id='canvas'></canvas>
+
+	<script type="text/javascript">
+		var cvioDisplay = new CVIODisplay({
+			target: document.getElementById('canvas'),
+			deviceId: '[B5GJU4TPYDD6KIH7]',
+		});
+		cvioDisplay.connect();
+	</script>
+</body>
+</html>
