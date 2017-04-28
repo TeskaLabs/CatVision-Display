@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>CatVision Screen Test</title>
+	<title>CatVision Display Example</title>
 </head>
 <body>
-	<script type="text/javascript" src="./dist/cvio.min.js"></script>
+	<script type="text/javascript" src="./dist/cvio.js"></script>
 	<script type="text/javascript">
+		// Init
 		CVIO.init({
-			url: 'https://catvision.io',
+			// Auth token in plain text (if not set, authTokenURL is used)
 			authToken: '[AUTH_TOKEN]',
+
+			// URL with a CatVision.io auth token (if not set, onAuthTokenRequest is used)
 			authTokenURL: '/authtoken',
+
+			// Custom CatVision.io auth token setter
 			onAuthTokenRequest: function() {
 				var xhr = new XMLHttpRequest();
 				xhr.open('GET', '/authtoken');
@@ -23,14 +28,57 @@
 		});
 	</script>
 
+
+	<!-- body -->
+	<div id='HUD'>
+		<button id='btnConnect'>Connect</button>
+		<button id='btnDisconnect'>Disconnect</button>
+	</div>
 	<canvas id='canvas'></canvas>
+	<!-- /end - body -->
+
 
 	<script type="text/javascript">
+		/**
+		 * Create CatVision.io Display and connect
+		 */
 		var cvioDisplay = new CVIODisplay({
 			target: document.getElementById('canvas'),
 			deviceHandle: '[B5GJU4TPYDD6KIH7]',
 		});
 		cvioDisplay.connect();
+
+		/**
+		 * Configure HUD
+		 */		
+		var btnConnect = document.getElementById('btnConnect'),
+		    btnDisconnect = document.getElementById('btnDisconnect');
+
+		// Connect button click event
+		btnConnect.addEventListener('click', function() {
+			cvioDisplay.connect();
+		});
+		// Disconnect button click event
+		btnDisconnect.addEventListener('click', function() {
+			cvioDisplay.disconnect();
+		})
+
+		// State change
+		cvioDisplay.on(CVIODisplay.EV_UPDATE_STATE, function(state, oldState){
+			// Do something...
+			console.log('CVIODisplay.EV_UPDATE_STATE', state, oldState);
+		})
+		// Connect success
+		cvioDisplay.on(CVIODisplay.EV_CONNECT, function() {
+			// Do something...
+			console.log('CVIODisplay.EV_CONNECT');
+		})
+		// Connect error
+		cvioDisplay.on(CVIODisplay.EV_CONNECT_ERROR, function(reason) {
+			// Do something...
+			console.log('CVIODisplay.EV_CONNECT_ERROR', reason);
+		})
+
 	</script>
 </body>
 </html>
