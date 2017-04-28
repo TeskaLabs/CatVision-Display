@@ -38,10 +38,10 @@ function extend(){
   CVIO.init = function(settings) {
     // CVIO Settings
     CVIO.settings = extend({
-      authToken: null,                  // SeaCat Panel auth token in plain text
+      authToken: null,                  //CatVision.io auth token in plain text
       authTokenURL: null,               // URL where auth token can be fetched
       onAuthTokenRequest: null,
-      url: null                         // SeaCat Panel URL
+      url: 'https://catvision.io'      // CatVision.io or any SeaCat panel URL
     }, settings);
 
     CVIO.authTokenRequested = false;
