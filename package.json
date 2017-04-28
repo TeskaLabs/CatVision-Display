@@ -1,0 +1,36 @@
+{
+  "name": "catvision-display",
+  "version": "1.0.0",
+  "description": "Javascript component that displays screen of a device equipped with CatVision SDK",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TeskaLabs/CatVision-Display.git"
+  },
+  "keywords": [
+    "remote",
+    "access",
+    "TeskaLabs",
+    "noVNC",
+    "SDK"
+  ],
+  "author": "Miloslav Pavelka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TeskaLabs/CatVision-Display/issues"
+  },
+  "homepage": "https://github.com/TeskaLabs/CatVision-Display#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^2.0.1",
+    "gulp-watch": "^4.3.11",
+    "novnc-node": "^0.5.3",
+    "requirejs": "^2.3.2"
+  }
+}
