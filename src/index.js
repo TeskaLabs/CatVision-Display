@@ -148,6 +148,7 @@ function extend(){
       target :              null, // Target canvas element
       deviceHandle :        null, // Device identification
       deviceHandleKey:      't',  // Device handle
+      raAttrsTimeout:       5000, // Timeout for fetching RA attributes
       retryDelay:           2000, // Delay to retry connection if client is not connected to a gateway
       password:             '',   // Password for the VNC server
       connectOnInit:        true  // Whether or not attempt remote access connection after initialization
@@ -166,20 +167,18 @@ function extend(){
                               return this.settings.password;
                             }.bind(this),
       'onUpdateState':      function(rfb, state, oldstate) {
-                              this.reactor.dispatchEvent(CVIODisplay.EV_UPDATE_STATE, state, oldstate)
+                              this.onRFBUpdateState(rfb, state, oldstate);
                             }.bind(this),
     }
 
-
+    // Assert mandatory settings
     if (this.settings.target == null) 
       throw 'CVIO Screen target element does not exist.';
     if (this.settings.deviceHandle == null) 
       throw 'Device ID is missing.';
 
-
     // Register callbacks
     this.reactor = new Reactor();
-    this.reactor.addEventListener(CVIODisplay.EV_ATTRS_LOAD, this.onRaAttrsLoad, this);
 
     // Register CVIO event listeners
     CVIO.reactor.addEventListener(CVIO.EV_SET_AUTH_TOKEN, function() {
@@ -193,8 +192,9 @@ function extend(){
 
 
   // Events
-  CVIODisplay.EV_UPDATE_STATE = 'raUpdateState';
-  CVIODisplay.EV_ATTRS_LOAD = 'raAttrsLoad';
+  CVIODisplay.EV_UPDATE_STATE  = 'raUpdateState';
+  CVIODisplay.EV_CONNECT       = 'connect';
+  CVIODisplay.EV_CONNECT_ERROR = 'connectError';
 
 
 
@@ -248,7 +248,7 @@ function extend(){
    * If RA attributes can't be downloaded due to missing or invalid auth token, requests auth token from CVIO
    *
    */
-  CVIODisplay.prototype.requestRaAttrs = function()
+  CVIODisplay.prototype.requestRaAttrs = function(onTimeout)
   {
     // Request auth token if needed
     if (CVIO.settings.authToken == null) {
@@ -257,9 +257,11 @@ function extend(){
     }
 
     var self = this;
+    this.requestedRaAttrs = true;
     this.raFetchAttrs(
       function success(raAttrs) {
         self.raAttrs = raAttrs;
+        self.requestedRaAttrs = false;
 
         // Continue with connecting
         if (self.connecting)
@@ -270,7 +272,14 @@ function extend(){
       },
       function error() {
         throw 'Can\'t fetch RA attributes.'
-      })
+      });
+
+    // fetch RA Attrs takes too long:
+    setTimeout(function() {
+      if (self.requestedRaAttrs)
+        onTimeout();
+      self.requestedRaAttrs = false;
+    }, this.settings.raAttrsTimeout);
   }
 
 
@@ -279,11 +288,28 @@ function extend(){
    *
    */
   CVIODisplay.prototype.connect = function () {
+    // This variable determines whether connect() should be reattempted
+    // when fresh attributes are set. Other methods must call connect()
+    // only when this.connecting is set to true!
+    // TODO: can this be determined by validating 'this' to be a CVIODisplay object?
     this.connecting = true;
 
     // Request RA attributes if not present
     if (this.raAttrs == null) {
-      this.requestRaAttrs();
+      this.requestRaAttrs(function onTimeout(){
+        // Couldn't fetch RA attributes before timeout
+        this.connecting = false;
+        this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, 'raAttrsTimeout')
+      }.bind(this));
+      return;
+    }
+
+    // Could get RA attributes but the client is not established
+    else if (!this.raAttrs.established) {
+      // Reset raAttrs so that they are re-requested on the next connect() call
+      this.raAttrs = null;
+      this.connecting = false;
+      this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, 'clientNotEstablished')
       return;
     }
 
@@ -291,7 +317,8 @@ function extend(){
     try {
       this.rfb = new noVNC.RFB(this.RFBSettings);
     } catch (e) {
-      this.reactor.dispatchEvent('initError', e);
+      this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, e);
+      return;
     }
 
     var protocol = 'ws://';
@@ -299,12 +326,13 @@ function extend(){
       protocol = 'wss://';
 
     var url = '';
-    
     url += protocol;
     url += this.raAttrs.link.ws_host + ':' + this.raAttrs.link.ws_port;
     url += '/'+this.raAttrs.link.client_id+'/'+this.raAttrs.link.gw_ip;
     url += '?cvio_nonce='+this.raAttrs.link.nonce;
 
+    // Whether or not the connect was successful is further determined by RFB state changes
+    // see CVIODisplay.prototype.onRFBUpdateState
     this.rfb.connect(url, '');
     this.connecting = false;
   }
@@ -319,10 +347,32 @@ function extend(){
   }
 
 
+  /**
+   * Handles RFB onUpdateState
+   */
+  CVIODisplay.prototype.onRFBUpdateState = function(rfb, state, oldstate) {
+    // Update state 
+    this.reactor.dispatchEvent(CVIODisplay.EV_UPDATE_STATE, state, oldstate);
+
+    // Spcific states
+    // 
+    if (state == 'normal' && oldstate == 'ServerInitialisation') {
+      // Successfully connected
+      this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT);
+    }
+    else if (state == 'disconnect' && oldstate == 'connecting') {
+      // Dropped by websockify or gateway.
+      // Some possible reasons:
+      // - invalid nonce,
+      // - SOCKS extension on gateway not available
+      // - client not established (according to the gateway)
+      this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, 'clientUnavailable');
+    }
+  }
+
+
 
   window.CVIO = CVIO;
   window.CVIODisplay = CVIODisplay;
-  if (window.cvioAsyncInit !== undefined)
-    window.cvioAsyncInit()
 
 })(window, undefined);
