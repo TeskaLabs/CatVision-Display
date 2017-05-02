@@ -2,7 +2,7 @@
   "name": "catvision-display",
   "version": "1.0.0",
   "description": "Javascript component that displays screen of a device equipped with CatVision SDK",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
