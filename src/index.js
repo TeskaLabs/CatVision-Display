@@ -194,7 +194,9 @@ function extend(){
   // Events
   CVIODisplay.EV_UPDATE_STATE  = 'raUpdateState';
   CVIODisplay.EV_CONNECT       = 'connect';
+  CVIODisplay.EV_DISCONNECT    = 'disconnect';
   CVIODisplay.EV_CONNECT_ERROR = 'connectError';
+  CVIODisplay.EV_ERROR         = 'error';
 
 
 
@@ -360,6 +362,10 @@ function extend(){
       // Successfully connected
       this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT);
     }
+    else if (state == 'disconnected' && oldstate == 'disconnect') {
+      // Successfully disconnected
+      this.reactor.dispatchEvent(CVIODisplay.EV_DISCONNECT);
+    }
     else if (state == 'disconnect' && oldstate == 'connecting') {
       // Dropped by websockify or gateway.
       // Some possible reasons:
@@ -367,6 +373,14 @@ function extend(){
       // - SOCKS extension on gateway not available
       // - client not established (according to the gateway)
       this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, 'clientUnavailable');
+    }
+    else if (state == 'failed' && oldstate == 'ProtocolVersion') {
+      // Connection failure on in protocol version phase
+      this.reactor.dispatchEvent(CVIODisplay.EV_CONNECT_ERROR, 'protocolVersion');
+    }
+    else if (state == 'failed' && oldstate == 'normal') {
+      // Connection interrupt
+      this.reactor.dispatchEvent(CVIODisplay.EV_ERROR, 'interrupt');
     }
   }
 
