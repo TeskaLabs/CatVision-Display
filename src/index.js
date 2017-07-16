@@ -41,7 +41,7 @@ function extend(){
       authToken: null,                  //CatVision.io auth token in plain text
       authTokenURL: null,               // URL with a CatVision.io auth token
       onAuthTokenRequest: null,         // Custom CatVision.io auth token setter
-      url: 'https://catvision.io'      // CatVision.io or any SeaCat panel URL
+      url: 'https://app.catvision.io'   // CatVision.io or any SeaCat panel URL
     }, settings);
 
     CVIO.authTokenRequested = false;
