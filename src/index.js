@@ -146,8 +146,8 @@ function extend(){
     // CVIO Screen Settings
     this.settings = extend({
       target :              null, // Target canvas element
-      deviceHandle :        null, // Device identification
-      deviceHandleKey:      't',  // Device handle
+      clientHandle :        null, // Device identification
+      clientHandleKey:      't',  // Device handle
       raAttrsTimeout:       5000, // Timeout for fetching RA attributes
       retryDelay:           2000, // Delay to retry connection if client is not connected to a gateway
       password:             '',   // Password for the VNC server
@@ -174,7 +174,7 @@ function extend(){
     // Assert mandatory settings
     if (this.settings.target == null) 
       throw 'CVIO Screen target element does not exist.';
-    if (this.settings.deviceHandle == null) 
+    if (this.settings.clientHandle == null) 
       throw 'Device ID is missing.';
 
     // Register callbacks
@@ -221,7 +221,7 @@ function extend(){
   {
     var url = ''
     url += CVIO.settings.url+'/api/ra/endpoint';
-    url += '?'+this.settings.deviceHandleKey+'='+this.settings.deviceHandle
+    url += '?'+this.settings.clientHandleKey+'='+this.settings.clientHandle
 
     var xhr = new XMLHttpRequest();
 
