@@ -38,8 +38,8 @@ function extend(){
   CVIO.init = function(settings) {
     // CVIO Settings
     CVIO.settings = extend({
-      authToken: null,                  //CatVision.io auth token in plain text
-      authTokenURL: null,               // URL with a CatVision.io auth token
+      authorizationToken: null,                  //CatVision.io auth token in plain text
+      authorizationTokenURL: null,               // URL with a CatVision.io auth token
       onAuthTokenRequest: null,         // Custom CatVision.io auth token setter
       url: 'https://app.catvision.io'   // CatVision.io or any SeaCat panel URL
     }, settings);
@@ -47,9 +47,9 @@ function extend(){
     CVIO.authTokenRequested = false;
     CVIO.reactor = new Reactor();
 
-    // if (CVIO.settings.authToken == null && CVIO.settings.authTokenURL != null)
+    // if (CVIO.settings.authorizationToken == null && CVIO.settings.authorizationTokenURL != null)
     //   CVIO.fetchAuthToken();
-    // else if (CVIO.settings.authToken == null && CVIO.settings.authTokenURL == null)
+    // else if (CVIO.settings.authorizationToken == null && CVIO.settings.authorizationTokenURL == null)
     //   throw 'SeaCat Panel Auth Token not specified.';
   }
 
@@ -62,12 +62,12 @@ function extend(){
    * @param {String} authToken - auth token
    */
   CVIO.setAuthToken = function(authToken) {
-    CVIO.settings.authToken = authToken;
+    CVIO.settings.authorizationToken = authToken;
     CVIO.reactor.dispatchEvent(CVIO.EV_SET_AUTH_TOKEN);
 
     // Delay is applied to flush late requests
     setTimeout(function() {
-      CVIO.settings.authTokenRequested = false;
+      CVIO.settings.authorizationTokenRequested = false;
     }, 200);
   }
 
@@ -80,7 +80,7 @@ function extend(){
    * where he is obliged to call setAuthToken manually.
    *
    * If user callback is not present, this method attempts
-   * to fetch the token from the url set in CVIO.settings.authTokenURL
+   * to fetch the token from the url set in CVIO.settings.authorizationTokenURL
    * 
    */
   CVIO.requestAuthToken = function()
@@ -94,7 +94,7 @@ function extend(){
       CVIO.settings.onAuthTokenRequest();
     }
 
-    else if (CVIO.settings.authTokenURL) {
+    else if (CVIO.settings.authorizationTokenURL) {
       CVIO.fetchAuthToken(function onSuccess(token) {
         CVIO.setAuthToken(token);
       }, function onError() {
@@ -118,7 +118,7 @@ function extend(){
   CVIO.fetchAuthToken = function(onSuccess, onError) {
     var xhr = new XMLHttpRequest();
 
-    xhr.open('GET', CVIO.settings.authTokenURL, true);
+    xhr.open('GET', CVIO.settings.authorizationTokenURL, true);
 
     if (onError != undefined)
       xhr.onerror = onError;
@@ -226,7 +226,7 @@ function extend(){
     var xhr = new XMLHttpRequest();
 
     xhr.open('GET', url, true);
-    xhr.setRequestHeader('X-SC-AuthToken', CVIO.settings.authToken);
+    xhr.setRequestHeader('X-SC-AuthToken', CVIO.settings.authorizationToken);
 
     if (onError != undefined)
       xhr.onerror = onError;
@@ -253,7 +253,7 @@ function extend(){
   CVIODisplay.prototype.requestRaAttrs = function(onTimeout)
   {
     // Request auth token if needed
-    if (CVIO.settings.authToken == null) {
+    if (CVIO.settings.authorizationToken == null) {
       CVIO.requestAuthToken();
       return;
     }

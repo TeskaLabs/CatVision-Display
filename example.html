@@ -9,10 +9,10 @@
 		// Init
 		CVIO.init({
 			// Auth token in plain text (if not set, authTokenURL is used)
-			authToken: '[AUTH_TOKEN]',
+			authorizationToken: '[AUTH_TOKEN]',
 
 			// URL with a CatVision.io auth token (if not set, onAuthTokenRequest is used)
-			authTokenURL: '/authtoken',
+			authorizationTokenURL: '/authtoken',
 
 			// Custom CatVision.io auth token setter
 			onAuthTokenRequest: function() {
@@ -44,7 +44,8 @@
 		 */
 		var cvioDisplay = new CVIODisplay({
 			target: document.getElementById('canvas'),
-			deviceHandle: '[B5GJU4TPYDD6KIH7]',
+			clientHandle: 'device-1',
+			clientHandleKey: 'u',
 		});
 		cvioDisplay.connect();
 
