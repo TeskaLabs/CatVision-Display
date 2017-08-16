@@ -146,8 +146,10 @@ function extend(){
     // CVIO Screen Settings
     this.settings = extend({
       target :              null, // Target canvas element
-      clientHandle :        null, // Device identification
-      clientHandleKey:      't',  // Device handle
+      clientHandle :        null, // Device identification, e. g. {'t' : '[CLIENT_TAG]'} for client tag
+      clientTag:            null,
+      clientId:             null,
+      customId:             null,
       raAttrsTimeout:       5000, // Timeout for fetching RA attributes
       retryDelay:           2000, // Delay to retry connection if client is not connected to a gateway
       password:             '',   // Password for the VNC server
@@ -171,11 +173,31 @@ function extend(){
                             }.bind(this),
     }
 
+    if (this.settings.clientHandle != null) {
+    } else if (this.settings.clientId != null) {
+      this.settings.clientHandle = {
+        'i' : this.settings.clientId
+      }
+    } else if (this.settings.clientTag != null) {
+      this.settings.clientHandle = {
+        't' : this.settings.clientTag
+      }
+    } else if (this.settings.customId != null) {
+      this.settings.clientHandle = {
+        'u' : this.settings.customId
+      }
+    }
+
     // Assert mandatory settings
     if (this.settings.target == null) 
       throw 'CVIO Screen target element does not exist.';
     if (this.settings.clientHandle == null) 
-      throw 'Device ID is missing.';
+      throw 'Device identification (clientId|clientTag|customId) is missing.';
+
+    if (typeof this.settings.clientHandle !== 'object')
+      throw 'clientHandle must be an object like {\'t\': \'[CLIENT_TAG]\'}'
+    if (Object.keys(this.settings.clientHandle).length == 0)
+      throw 'clientHandle must contain a key-value pair.'
 
     // Register callbacks
     this.reactor = new Reactor();
@@ -220,8 +242,10 @@ function extend(){
   CVIODisplay.prototype.raFetchAttrs = function (onSuccess, onAccessDenied, onError)
   {
     var url = ''
+    var key=Object.keys(this.settings.clientHandle)[0]
+    
     url += CVIO.settings.url+'/api/ra/endpoint';
-    url += '?'+this.settings.clientHandleKey+'='+this.settings.clientHandle
+    url += '?'+key+'='+this.settings.clientHandle[key]
 
     var xhr = new XMLHttpRequest();
 
